@@ -16,11 +16,14 @@ var _ = Describe("FsRegistry", func() {
 	)
 	BeforeEach(func() {
 		fs = fstest.MapFS{
-			"dog/latest": {
-				Data: []byte("1.0.0"),
-			},
 			"dog/1.0.0/file.txt": {
 				Data: []byte("woof"),
+			},
+			"dog/1.0.1/file.txt": {
+				Data: []byte("woof!"),
+			},
+			"dog/2.0.0/file.txt": {
+				Data: []byte("woof woof"),
 			},
 			"cat/latest": {
 				Data: []byte("1.0.0"),
@@ -77,9 +80,64 @@ var _ = Describe("FsRegistry", func() {
 		Expect(len(resp)).To(Equal(1))
 		for _, p := range resp {
 			Expect(len(p.Versions)).To(Equal(1))
+			Expect(p.Versions[0].Number).To(Equal("1.0.0"))
 		}
 	})
-	It("can list latest package version", func() {
+	It("can list specific package with constraint", func() {
+		resp, err := reg.List(
+			&verman.ListRequest{
+				Package: &verman.PackageCriteria{
+					Name: "cat",
+					Version: &verman.PackageVersionCriteria{
+						Expression: "=2.0.0",
+					},
+				},
+			},
+		)
 
+		Expect(err).To(BeNil())
+		Expect(len(resp)).To(Equal(1))
+		for _, p := range resp {
+			Expect(len(p.Versions)).To(Equal(1))
+			Expect(p.Versions[0].Number).To(Equal("2.0.0"))
+		}
+	})
+	When("latest file present", func() {
+		It("can list latest package version", func() {
+			resp, err := reg.List(
+				&verman.ListRequest{
+					Package: &verman.PackageCriteria{
+						Name: "cat",
+						Version: &verman.PackageVersionCriteria{
+							Latest: true,
+						},
+					},
+				},
+			)
+
+			Expect(err).To(BeNil())
+			Expect(len(resp)).To(Equal(1))
+			Expect(len(resp[0].Versions)).To(Equal(1))
+			Expect(resp[0].Versions[0].Number).To(Equal("1.0.0"))
+		})
+	})
+	When("latest file missing", func() {
+		It("can list latest package version", func() {
+			resp, err := reg.List(
+				&verman.ListRequest{
+					Package: &verman.PackageCriteria{
+						Name: "dog",
+						Version: &verman.PackageVersionCriteria{
+							Latest: true,
+						},
+					},
+				},
+			)
+
+			Expect(err).To(BeNil())
+			Expect(len(resp)).To(Equal(1))
+			Expect(len(resp[0].Versions)).To(Equal(1))
+			Expect(resp[0].Versions[0].Number).To(Equal("2.0.0"))
+		})
 	})
 })
