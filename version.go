@@ -1,6 +1,6 @@
 package main
 
 type Version struct {
-	Content []byte
-	Number  string
+	Number string
+	Files  []File
 }

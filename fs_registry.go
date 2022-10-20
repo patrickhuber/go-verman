@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	iofs "io/fs"
+	"net/url"
 	"os"
 	"path"
 	"sort"
@@ -136,9 +137,36 @@ func (r *fsRegistry) Get(req *GetRequest) (Package, error) {
 	if err != nil {
 		return Package{}, err
 	}
+
+	entries, err := iofs.ReadDir(r.fs, versionPath)
+	if err != nil {
+		return Package{}, err
+	}
+
+	files := []File{}
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		ustring, err := url.JoinPath("file://", versionPath, e.Name())
+		if err != nil {
+			return Package{}, err
+		}
+		u, err := url.Parse(ustring)
+		if err != nil {
+			return Package{}, err
+		}
+		files = append(files, File{
+			Name: e.Name(),
+			Link: u,
+		})
+	}
 	return Package{
 			Name: req.PackageName,
 			Versions: []Version{
-				{Number: req.PackageVersion}}},
+				{
+					Number: req.PackageVersion,
+					Files:  files,
+				}}},
 		nil
 }

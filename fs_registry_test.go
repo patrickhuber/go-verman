@@ -153,7 +153,14 @@ var _ = Describe("FsRegistry", func() {
 			Expect(resp).ToNot(BeNil())
 			Expect(resp.Name).To(Equal(req.PackageName))
 			Expect(len(resp.Versions)).To(Equal(1))
-			Expect(resp.Versions[0].Number).To(Equal(req.PackageVersion))
+
+			v := resp.Versions[0]
+			Expect(v.Number).To(Equal(req.PackageVersion))
+			Expect(len(v.Files)).To(Equal(1))
+
+			f := v.Files[0]
+			Expect(f.Name).To(Equal("file.txt"))
+			Expect(f.Link).ToNot(BeNil())
 		})
 	})
 })
