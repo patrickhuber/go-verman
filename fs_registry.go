@@ -129,3 +129,16 @@ func (r *fsRegistry) List(req *ListRequest) ([]Package, error) {
 	}
 	return results, nil
 }
+
+func (r *fsRegistry) Get(req *GetRequest) (Package, error) {
+	versionPath := path.Join(r.root, req.PackageName, req.PackageVersion)
+	_, err := iofs.Stat(r.fs, versionPath)
+	if err != nil {
+		return Package{}, err
+	}
+	return Package{
+			Name: req.PackageName,
+			Versions: []Version{
+				{Number: req.PackageVersion}}},
+		nil
+}

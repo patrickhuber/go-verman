@@ -37,79 +37,41 @@ var _ = Describe("FsRegistry", func() {
 		}
 		reg = verman.NewFsRegistry(fs, ".")
 	})
-	It("can list", func() {
-		resp, err := reg.List(&verman.ListRequest{})
-		Expect(err).To(BeNil())
-		Expect(len(resp)).Should(BeNumerically(">=", 1))
-	})
-	It("can list package by name", func() {
-		resp, err := reg.List(
-			&verman.ListRequest{
-				Package: &verman.PackageCriteria{
-					Name: "cat"}})
-		Expect(err).To(BeNil())
-		Expect(len(resp)).Should(Equal(1))
-	})
-	It("can list package versions", func() {
-		resp, err := reg.List(
-			&verman.ListRequest{
-				Package: &verman.PackageCriteria{
-					Name: "cat",
-				},
-			},
-		)
-		Expect(err).To(BeNil())
-		Expect(len(resp)).To(Equal(1))
-		for _, p := range resp {
-			Expect(len(p.Versions)).To(Equal(2))
-		}
-	})
-	It("can list specific package version", func() {
-		resp, err := reg.List(
-			&verman.ListRequest{
-				Package: &verman.PackageCriteria{
-					Name: "cat",
-					Version: &verman.PackageVersionCriteria{
-						Expression: "1.0.0",
+	Describe("List", func() {
+		It("can list", func() {
+			resp, err := reg.List(&verman.ListRequest{})
+			Expect(err).To(BeNil())
+			Expect(len(resp)).Should(BeNumerically(">=", 1))
+		})
+		It("can list package by name", func() {
+			resp, err := reg.List(
+				&verman.ListRequest{
+					Package: &verman.PackageCriteria{
+						Name: "cat"}})
+			Expect(err).To(BeNil())
+			Expect(len(resp)).Should(Equal(1))
+		})
+		It("can list package versions", func() {
+			resp, err := reg.List(
+				&verman.ListRequest{
+					Package: &verman.PackageCriteria{
+						Name: "cat",
 					},
 				},
-			},
-		)
-
-		Expect(err).To(BeNil())
-		Expect(len(resp)).To(Equal(1))
-		for _, p := range resp {
-			Expect(len(p.Versions)).To(Equal(1))
-			Expect(p.Versions[0].Number).To(Equal("1.0.0"))
-		}
-	})
-	It("can list specific package with constraint", func() {
-		resp, err := reg.List(
-			&verman.ListRequest{
-				Package: &verman.PackageCriteria{
-					Name: "cat",
-					Version: &verman.PackageVersionCriteria{
-						Expression: "=2.0.0",
-					},
-				},
-			},
-		)
-
-		Expect(err).To(BeNil())
-		Expect(len(resp)).To(Equal(1))
-		for _, p := range resp {
-			Expect(len(p.Versions)).To(Equal(1))
-			Expect(p.Versions[0].Number).To(Equal("2.0.0"))
-		}
-	})
-	When("latest file present", func() {
-		It("can list latest package version", func() {
+			)
+			Expect(err).To(BeNil())
+			Expect(len(resp)).To(Equal(1))
+			for _, p := range resp {
+				Expect(len(p.Versions)).To(Equal(2))
+			}
+		})
+		It("can list specific package version", func() {
 			resp, err := reg.List(
 				&verman.ListRequest{
 					Package: &verman.PackageCriteria{
 						Name: "cat",
 						Version: &verman.PackageVersionCriteria{
-							Latest: true,
+							Expression: "1.0.0",
 						},
 					},
 				},
@@ -117,18 +79,18 @@ var _ = Describe("FsRegistry", func() {
 
 			Expect(err).To(BeNil())
 			Expect(len(resp)).To(Equal(1))
-			Expect(len(resp[0].Versions)).To(Equal(1))
-			Expect(resp[0].Versions[0].Number).To(Equal("1.0.0"))
+			for _, p := range resp {
+				Expect(len(p.Versions)).To(Equal(1))
+				Expect(p.Versions[0].Number).To(Equal("1.0.0"))
+			}
 		})
-	})
-	When("latest file missing", func() {
-		It("can list latest package version", func() {
+		It("can list specific package with constraint", func() {
 			resp, err := reg.List(
 				&verman.ListRequest{
 					Package: &verman.PackageCriteria{
-						Name: "dog",
+						Name: "cat",
 						Version: &verman.PackageVersionCriteria{
-							Latest: true,
+							Expression: "=2.0.0",
 						},
 					},
 				},
@@ -136,8 +98,62 @@ var _ = Describe("FsRegistry", func() {
 
 			Expect(err).To(BeNil())
 			Expect(len(resp)).To(Equal(1))
-			Expect(len(resp[0].Versions)).To(Equal(1))
-			Expect(resp[0].Versions[0].Number).To(Equal("2.0.0"))
+			for _, p := range resp {
+				Expect(len(p.Versions)).To(Equal(1))
+				Expect(p.Versions[0].Number).To(Equal("2.0.0"))
+			}
+		})
+		When("latest file present", func() {
+			It("can list latest package version", func() {
+				resp, err := reg.List(
+					&verman.ListRequest{
+						Package: &verman.PackageCriteria{
+							Name: "cat",
+							Version: &verman.PackageVersionCriteria{
+								Latest: true,
+							},
+						},
+					},
+				)
+
+				Expect(err).To(BeNil())
+				Expect(len(resp)).To(Equal(1))
+				Expect(len(resp[0].Versions)).To(Equal(1))
+				Expect(resp[0].Versions[0].Number).To(Equal("1.0.0"))
+			})
+		})
+		When("latest file missing", func() {
+			It("can list latest package version", func() {
+				resp, err := reg.List(
+					&verman.ListRequest{
+						Package: &verman.PackageCriteria{
+							Name: "dog",
+							Version: &verman.PackageVersionCriteria{
+								Latest: true,
+							},
+						},
+					},
+				)
+
+				Expect(err).To(BeNil())
+				Expect(len(resp)).To(Equal(1))
+				Expect(len(resp[0].Versions)).To(Equal(1))
+				Expect(resp[0].Versions[0].Number).To(Equal("2.0.0"))
+			})
+		})
+	})
+	Describe("Get", func() {
+		It("can get package version", func() {
+			req := &verman.GetRequest{
+				PackageName:    "cat",
+				PackageVersion: "1.0.0",
+			}
+			resp, err := reg.Get(req)
+			Expect(err).To(BeNil())
+			Expect(resp).ToNot(BeNil())
+			Expect(resp.Name).To(Equal(req.PackageName))
+			Expect(len(resp.Versions)).To(Equal(1))
+			Expect(resp.Versions[0].Number).To(Equal(req.PackageVersion))
 		})
 	})
 })
